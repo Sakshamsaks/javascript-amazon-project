@@ -1,8 +1,8 @@
-import {cart,removeformcart} from '../data/cart.js';
+import {cart,removeformcart,updatedeliveryoption} from '../data/cart.js';
 import { products } from '../data/products.js';
 import { formatcurrency } from './utils/money.js';
 import dayjs from 'https://unpkg.com/dayjs@1.11.10/esm/index.js';
-import {deliveryoption} from '../data/deliveryoptions.js'
+import {deliveryoptions} from '../data/deliveryoptions.js'
 
 let cartsummeryHTML='';
 
@@ -17,23 +17,23 @@ cart.forEach((cartitem)=>{
         }
     });
 
-    const deliveryoptionid=cartitem.deliveryoptionId;
+    const deliveryoptionId=cartitem.deliveryoptionId;
 
-    let deliveryoptions;
+    let deliveryoption;
 
-    deliveryoption.forEach((option)=>{
-      if(option.id===deliveryoptionid){
-        deliveryoptions=option;
+    deliveryoptions.forEach((option)=>{
+      if(option.id===deliveryoptionId){
+        deliveryoption=option;
       }
     });
 
     const today=dayjs();
-    const deliverydate=today.add(deliveryoptions.deliverydays,'days');
+    const deliverydate=today.add(deliveryoption.deliverydays,'days');
     const datestring=deliverydate.format('dddd, MMMM D');
 
     cartsummeryHTML+=`
     <div class="cart-item-container js-cart-item-container-${matchingproduct.id}">
-            <div class="delivery-date">
+            <div class="delivery-date js-delivery-option">
               Delivery date: ${datestring}
             </div>
 
@@ -74,7 +74,7 @@ cart.forEach((cartitem)=>{
 
 function deliveryoptionHTML(matchingproduct,cartitem){
   let HTML='';
-  deliveryoption.forEach((deliveryoption)=>{
+  deliveryoptions.forEach((deliveryoption)=>{
     const today=dayjs();
     const deliverydate=today.add(deliveryoption.deliverydays,'days');
     const datestring=deliverydate.format('dddd, MMMM D');
@@ -82,7 +82,9 @@ function deliveryoptionHTML(matchingproduct,cartitem){
     const ischecked=deliveryoption.id===cartitem.deliveryoptionId;
     
     HTML+=`
-    <div class="delivery-option">
+    <div class="delivery-option js-delivery-option"
+                  data-product-id="${matchingproduct.id}"
+                  data-delivery-option-id="${deliveryoption.id}">
                   <input type="radio"
                     ${ischecked?'checked':''}
                     class="delivery-option-input"
@@ -97,7 +99,7 @@ function deliveryoptionHTML(matchingproduct,cartitem){
                   </div>
       </div>
     `
-  })
+  });
 
   return HTML;
 }
@@ -114,4 +116,11 @@ document.querySelectorAll('.js-delete-link').forEach((link)=>{
         container.remove();
     });
 
+});
+
+document.querySelectorAll('.js-delivery-option').forEach((element)=>{
+  element.addEventListener('click',()=>{
+    const {productId,deliveryoptionId}=element.dataset;
+    updatedeliveryoption(productId,deliveryoptionId);
+  });
 });
